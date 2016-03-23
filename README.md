@@ -4,7 +4,7 @@ author: "Ilde Domínguez Losada"
 date: "23/03/2016"
 output: html_document
 ---
-SCRIPT: Untitles.Rmd
+SCRIPT: Untitled.Rmd
 
 AUTHOR: Ilde Domínguez Losada (fdominguezlo)
 
