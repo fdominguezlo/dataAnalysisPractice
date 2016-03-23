@@ -10,7 +10,7 @@ AUTHOR: Ilde Domínguez Losada (fdominguezlo)
 
 DATE: 23/03/2016
 
-OUTPUT: Untitles.md, Untitled.html 
+OUTPUT: Untitled.md, Untitled.html 
 
 PURPOSE: Report answering some questions about portuguese and maths student data
 
