@@ -1,0 +1,137 @@
+---
+title: "Analisis con R"
+author: "Ilde Dominguez"
+date: "16 de marzo de 2016"
+output: html_document
+---
+
+Análisis y procesamiento de datos utilziando un documento R Markdown.
+
+Cargamos los datos de estudiantes de Matematicas y Portugues
+```{r}
+library(knitr)
+
+con <- file("./datos/student/student-mat.csv")
+por <- file("./datos/student/student-por.csv")
+studenPor <- read.csv2(por)
+studenMat <- read.csv2(con)
+
+```
+
+Estudiantes de matematicas:
+
+```{r}
+kable(head(studenMat[]))
+```
+
+Estudiantes de portugues:
+
+```{r}
+kable(head(studenPor[]))
+```
+
+Como vemos que el nombre de las columnas estan en mayusculas y minusculas, las pasamos todas a minusculas
+
+```{r}
+names(studenMat)
+names(studenMat) <- tolower(names(studenMat))
+names(studenMat)
+```
+
+También aplicamos el cambio en los estudiantes de portugues
+```{r}
+names(studenPor)
+names(studenPor) <- tolower(names(studenPor))
+names(studenPor)
+```
+Seguimos limpiando los datos, y comprobamos que tenemos "underscores" dentro de las columnas mjob y fjob.
+Obtenemos el número de elementos que tenemos:
+```{r}
+length(grep("_",studenMat$mjob))
+length(grep("_",studenMat$fjob))
+```
+Para sustituirlos utilizamos el comando gsub
+```{r}
+studenMat$mjob <- gsub("_", "", studenMat$mjob)
+studenPor$mjob <- gsub("_", "", studenPor$mjob)
+studenMat$fjob <- gsub("_", "", studenMat$fjob)
+studenPor$fjob <- gsub("_", "", studenPor$fjob)
+length(grep("_",studenMat$mjob))
+length(grep("_",studenMat$fjob))
+length(grep("_",studenPor$mjob))
+length(grep("_",studenPor$fjob))
+```
+
+Ahora lo que hacemos es ver cuantos alumnos estudian las dos materias.
+```{r}
+studenMatPor <- merge(studenMat, studenPor, by=c('school', 'sex', 'age', 'address', 'famsize', 'pstatus', 'medu', 'fedu', 'mjob', 'fjob', 'reason', 'nursery', 'internet'), all=FALSE, suffixes = c('mat', 'por'))
+dim(studenMatPor)
+```
+
+Lo que hacemos es que todas los datos de las columnas, que estan marcandas con la propiedad BY, que tengan correspondencia en ambos dataFrame, solo los que tengan correspondencia all=FALSE, se guardaran en un nuevo dataFrame
+
+Ahora vamos a ordenar el nuevo dataFrame, 'studenMarPot', primeramente por la columna de famsize y luego por pStatus
+
+```{r}
+studenMatPor2 <- studenMatPor[order(
+    xtfrm(studenMatPor[,5]),studenMatPor[,6]), ]
+studenMatPor2[1:30, 1:7]
+```
+
+El problema lo tenemos cuando queremos hacer una ordenación decreciente de la columna 'famsize' , que lo primero que nos saca es 'LE3'
+
+```{r}
+studenMatPorDecr <- studenMatPor2[order(
+     -xtfrm(studenMatPor2[,5]),studenMatPor2[,6]), ]
+studenMatPorDecr[1:10, 1:7]
+```
+
+Para arreglar esto lo que hacemos es un relevel del studenMatPor
+```{r}
+studenMatPor2$famsize <- relevel(studenMatPor2$famsize,ref="LE3")
+studenMatPorDecr <- studenMatPor2[order(
+     -xtfrm(studenMatPor2[,5]),-studenMatPor2[,6]), ]
+studenMatPorDecr[1:50, 1:7]
+```
+
+TRANSFORMACION DE DATOS CON R
+
+Utilización de la función "tapply()", podemos aplicar una función sobre un subconjunto de vectores.
+
+¿Que alumnos suman mas ausencias los que suman extraexcolares o los que no?
+```{r}
+tapply(studenMat$absences, studenMat$paid,sum)
+```
+
+Utilización de las funciones split() y sapply() para calcular la media de graduación de los alumnos en función de la profesión del padre.
+
+Con Split tomamos todos los alumnos de matematicas y los categorizamos por la profesión del padre.
+Con Sapply aplicamos a cada elemento de 'divideJob' una función.
+
+```{r ,message=FALSE, warning=FALSE}
+library(gplots)
+divideJob <- split(studenMat, studenMat$fjob)
+textplot(sapply(divideJob, function(x) mean(x$g3)), mar=c(0,0,0,0), cex=0.8, fixed.width=TRUE)
+```
+
+Análisis exploratorio con R
+
+Podemos utilizar Operadores como 'any' u 'all' para obtener datos de una columna:
+
+```{r}
+#Vemos a ver si algun estudiante ha sacado un 20
+any(studenMat$g3 == 20)
+
+#Vemos si hay algun estudiante que haya sacado un 0
+all(studenMat$g3 > 0)
+```
+
+Para utilizar alguna libreria para representar los datos, he escogido la libreria graphics, en la que representare los datos de los dos colegios en los que comparo las notas de los alumnos con sus faltas de asistencia.
+
+```{r}
+par(mfrow = c(1, 2), mar = c(5, 4, 2, 1))
+with(subset(studenMat, school == "GP"),
+     plot(absences, g3, main = "GP", pch=20))
+with(subset(studenMat, school == "MS"),
+     plot(absences, g3, main = "MS", pch=20))
+```
